@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { products } from './data/products';
 import { Product, CartItem } from './types';
 import Header from './components/Header';
@@ -14,13 +14,6 @@ function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showCart, setShowCart] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState({
-    priceRange: [0, 200] as [number, number],
-    thcRange: [0, 30] as [number, number],
-    category: 'all',
-    inStock: false,
-  });
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
 
@@ -54,14 +47,6 @@ function App() {
           : item
       )
     );
-  };
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
-
-  const handleFilterChange = (newFilters: any) => {
-    setFilters(newFilters);
   };
 
   const handleProductClick = (product: Product) => {
@@ -104,8 +89,8 @@ function App() {
 
             {/* Search Bar */}
             <SearchBar
-              onSearch={handleSearch}
-              onFilterChange={handleFilterChange}
+              onSearch={() => {}}
+              onFilterChange={() => {}}
             />
 
             {/* Product Feed */}

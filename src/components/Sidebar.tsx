@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Home, Leaf, Star, Cookie, Wrench, User, Package, Clock, LogIn, Gift, Heart, Bell, Settings } from 'lucide-react';
+import { Home, Leaf, Star, Cookie, Wrench, User, Package, Clock, LogIn, Gift, Heart, Bell, Settings, LogOut } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import AuthModal from './AuthModal';
 
 interface SidebarProps {
   selectedCategory: string;
@@ -7,8 +9,8 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ selectedCategory, onCategoryChange }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { user, profile, isAuthenticated, signOut } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const categories = [
     { id: 'all', name: 'All Products', icon: <Home className="h-5 w-5" /> },
@@ -28,16 +30,15 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedCategory, onCategoryChange })
     { id: '2', title: 'Free Shipping', discount: 'On orders $100+', code: 'FREESHIP' },
   ];
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-    setShowLoginModal(false);
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
     <div className="space-y-6">
       {/* User Profile Section */}
       <div className="card">
-        {isLoggedIn ? (
+        {isAuthenticated && profile ? (
           <>
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
@@ -45,7 +46,9 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedCategory, onCategoryChange })
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 dark:text-white">Welcome Back</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Premium Member</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {profile.username || user?.email?.split('@')[0] || 'Premium Member'}
+                </p>
               </div>
             </div>
             
@@ -74,6 +77,15 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedCategory, onCategoryChange })
                 <span>Settings</span>
               </button>
             </div>
+
+            {/* Sign Out Button */}
+            <button
+              onClick={handleSignOut}
+              className="w-full mt-3 btn-secondary text-xs py-2 flex items-center justify-center space-x-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+            >
+              <LogOut className="h-3 w-3" />
+              <span>Sign Out</span>
+            </button>
           </>
         ) : (
           <>
@@ -86,7 +98,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedCategory, onCategoryChange })
             </div>
             
             <button 
-              onClick={() => setShowLoginModal(true)}
+              onClick={() => setShowAuthModal(true)}
               className="w-full btn-primary py-3 flex items-center justify-center space-x-2"
             >
               <LogIn className="h-4 w-4" />
@@ -122,7 +134,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedCategory, onCategoryChange })
       </div>
 
       {/* Recent Orders */}
-      {isLoggedIn && (
+      {isAuthenticated && (
         <div className="card">
           <div className="flex items-center space-x-2 mb-4">
             <Package className="h-5 w-5 text-primary-600 dark:text-primary-400" />
@@ -190,38 +202,11 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedCategory, onCategoryChange })
         </div>
       </div>
 
-      {/* Login Modal */}
-      {showLoginModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Sign In</h3>
-            <div className="space-y-4">
-              <input
-                type="email"
-                placeholder="Email"
-                className="input-field"
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                className="input-field"
-              />
-              <button
-                onClick={handleLogin}
-                className="w-full btn-primary py-3"
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => setShowLoginModal(false)}
-                className="w-full btn-secondary py-3"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </div>
   );
 };
