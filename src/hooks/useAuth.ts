@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { authService, AuthUser, SignUpData, SignInData } from '../services/authService';
+import { supabase } from '../lib/supabase';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -13,6 +14,16 @@ export const useAuth = () => {
     const initializeAuth = async () => {
       try {
         setLoading(true);
+        
+        // Get the current session from Supabase
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+        }
+        
+        console.log('Current session:', session);
+        
         const currentUser = await authService.getCurrentUser();
         setUser(currentUser);
 
@@ -32,6 +43,7 @@ export const useAuth = () => {
 
     // Listen to auth state changes
     const { data: { subscription } } = authService.onAuthStateChange(async (user) => {
+      console.log('Auth state changed:', user);
       setUser(user);
       
       if (user) {

@@ -1,70 +1,62 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { products } from './data/products';
-import { Product, CartItem } from './types';
+import { useAuth } from './hooks/useAuth';
+import { useCart } from './hooks/useCart';
+import { useProducts } from './hooks/useProducts';
 import Header from './components/Header';
 import ProductFeed from './components/ProductFeed';
 import Sidebar from './components/Sidebar';
 import Cart from './components/Cart';
+import Orders from './components/Orders';
+import About from './components/About';
+import Contact from './components/Contact';
 import SearchBar from './components/SearchBar';
 import FeaturedBanner from './components/FeaturedBanner';
 import ProductModal from './components/ProductModal';
 import DarkModeToggle from './components/DarkModeToggle';
-import AuthCallback from './components/AuthCallback';
+import LoadingSpinner from './components/LoadingSpinner';
+import { Product } from './types';
+import './index.css';
 
-function MainApp() {
-  const [cart, setCart] = useState<CartItem[]>([]);
+function App() {
+  const { loading: authLoading } = useAuth();
+  const { products, loading: productsLoading } = useProducts();
+  const { cartItems, addToCart, removeFromCart, updateQuantity, getCartTotal, getCartItemCount } = useCart();
+  
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showCart, setShowCart] = useState(false);
+  const [showOrders, setShowOrders] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
+  const [showContact, setShowContact] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
-
-  const addToCart = (product: Product) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.product.id === product.id);
-      if (existingItem) {
-        return prevCart.map(item =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prevCart, { product, quantity: 1 }];
-    });
-  };
-
-  const removeFromCart = (productId: string) => {
-    setCart(prevCart => prevCart.filter(item => item.product.id !== productId));
-  };
-
-  const updateQuantity = (productId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(productId);
-      return;
-    }
-    setCart(prevCart =>
-      prevCart.map(item =>
-        item.product.id === productId
-          ? { ...item, quantity }
-          : item
-      )
-    );
-  };
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
     setShowProductModal(true);
   };
 
+  const handleAddToCart = async (product: Product) => {
+    const success = await addToCart(product.id, 1);
+    if (success) {
+      console.log('Product added to cart successfully');
+    }
+  };
+
   // Get featured products for banner
   const featuredProducts = products.filter(product => product.featured);
-  const cartTotal = cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+
+  if (authLoading || productsLoading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <Header 
-        cartItemCount={cart.length}
+        cartItemCount={getCartItemCount()}
         onCartClick={() => setShowCart(true)}
+        onOrdersClick={() => setShowOrders(true)}
+        onAboutClick={() => setShowAbout(true)}
+        onContactClick={() => setShowContact(true)}
       />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
@@ -98,16 +90,16 @@ function MainApp() {
             {/* Product Feed */}
             <ProductFeed
               selectedCategory={selectedCategory}
-              onAddToCart={addToCart}
+              onAddToCart={handleAddToCart}
               onProductClick={handleProductClick}
             />
           </div>
 
           {/* Cart Sidebar */}
           <div className="lg:col-span-1">
-            <Cart
-              items={cart}
-              total={cartTotal}
+            <Cart 
+              items={cartItems}
+              total={getCartTotal()}
               onUpdateQuantity={updateQuantity}
               onRemoveItem={removeFromCart}
               isOpen={showCart}
@@ -122,20 +114,27 @@ function MainApp() {
         product={selectedProduct}
         isOpen={showProductModal}
         onClose={() => setShowProductModal(false)}
-        onAddToCart={addToCart}
+        onAddToCart={handleAddToCart}
+      />
+
+      {/* Orders Modal */}
+      <Orders
+        isOpen={showOrders}
+        onClose={() => setShowOrders(false)}
+      />
+
+      {/* About Modal */}
+      <About
+        isOpen={showAbout}
+        onClose={() => setShowAbout(false)}
+      />
+
+      {/* Contact Modal */}
+      <Contact
+        isOpen={showContact}
+        onClose={() => setShowContact(false)}
       />
     </div>
-  );
-}
-
-function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/" element={<MainApp />} />
-      </Routes>
-    </Router>
   );
 }
 

@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner from './LoadingSpinner';
 
 const AuthCallback: React.FC = () => {
   const [message, setMessage] = useState<string>('Processing...');
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -20,7 +18,7 @@ const AuthCallback: React.FC = () => {
 
         if (error) {
           setMessage(`Error: ${errorDescription || error}`);
-          setTimeout(() => navigate('/'), 3000);
+          setTimeout(() => window.location.href = '/', 3000);
           return;
         }
 
@@ -33,27 +31,27 @@ const AuthCallback: React.FC = () => {
 
           if (sessionError) {
             setMessage('Failed to complete authentication');
-            setTimeout(() => navigate('/'), 3000);
+            setTimeout(() => window.location.href = '/', 3000);
             return;
           }
 
           setMessage('Authentication successful! Redirecting...');
-          setTimeout(() => navigate('/'), 2000);
+          setTimeout(() => window.location.href = '/', 2000);
         } else {
           setMessage('No authentication tokens found');
-          setTimeout(() => navigate('/'), 3000);
+          setTimeout(() => window.location.href = '/', 3000);
         }
       } catch (err) {
         console.error('Auth callback error:', err);
         setMessage('An error occurred during authentication');
-        setTimeout(() => navigate('/'), 3000);
+        setTimeout(() => window.location.href = '/', 3000);
       } finally {
         setIsLoading(false);
       }
     };
 
     handleAuthCallback();
-  }, [navigate]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">

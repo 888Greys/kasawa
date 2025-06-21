@@ -1,206 +1,216 @@
 import React, { useState } from 'react';
-import { Home, Leaf, Star, Cookie, Wrench, User, Package, Clock, LogIn, Gift, Heart, Bell, Settings, LogOut } from 'lucide-react';
+import { 
+  Home, 
+  Flower, 
+  Droplets, 
+  Cookie, 
+  Wrench, 
+  Package, 
+  User, 
+  LogOut, 
+  LogIn,
+  ShoppingBag,
+  Clock,
+  Star
+} from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { Order } from '../services/orderService';
 import AuthModal from './AuthModal';
 
 interface SidebarProps {
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
+  recentOrders?: Order[];
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ selectedCategory, onCategoryChange }) => {
-  const { user, profile, isAuthenticated, signOut } = useAuth();
+const Sidebar: React.FC<SidebarProps> = ({ 
+  selectedCategory, 
+  onCategoryChange,
+  recentOrders = []
+}) => {
+  const { user, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const categories = [
-    { id: 'all', name: 'All Products', icon: <Home className="h-5 w-5" /> },
-    { id: 'flower', name: 'Flower', icon: <Leaf className="h-5 w-5" /> },
-    { id: 'concentrate', name: 'Concentrates', icon: <Star className="h-5 w-5" /> },
-    { id: 'edible', name: 'Edibles', icon: <Cookie className="h-5 w-5" /> },
-    { id: 'accessory', name: 'Accessories', icon: <Wrench className="h-5 w-5" /> },
-  ];
-
-  const recentOrders = [
-    { id: '1', name: 'OG Kush Premium', date: '2 days ago', status: 'Delivered' },
-    { id: '2', name: 'Live Resin Concentrate', date: '1 week ago', status: 'Delivered' },
-  ];
-
-  const specialOffers = [
-    { id: '1', title: 'First Order', discount: '20% OFF', code: 'WELCOME20' },
-    { id: '2', title: 'Free Shipping', discount: 'On orders $100+', code: 'FREESHIP' },
+    { id: 'all', name: 'All Products', icon: Home },
+    { id: 'flower', name: 'Flower', icon: Flower },
+    { id: 'concentrate', name: 'Concentrates', icon: Droplets },
+    { id: 'edible', name: 'Edibles', icon: Cookie },
+    { id: 'accessory', name: 'Accessories', icon: Wrench },
   ];
 
   const handleSignOut = async () => {
     await signOut();
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/20';
+      case 'processing': return 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20';
+      case 'shipped': return 'text-purple-600 bg-purple-100 dark:text-purple-400 dark:bg-purple-900/20';
+      case 'delivered': return 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20';
+      case 'cancelled': return 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/20';
+      default: return 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20';
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* User Profile Section */}
-      <div className="card">
-        {isAuthenticated && profile ? (
-          <>
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                <User className="h-6 w-6 text-gray-400" />
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+        {user ? (
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
+                <User className="w-5 h-5 text-green-600 dark:text-green-400" />
               </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Welcome Back</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {profile.username || user?.email?.split('@')[0] || 'Premium Member'}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                  {user.email}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Member
                 </p>
               </div>
             </div>
-            
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-center">
-                <Package className="h-5 w-5 text-primary-600 dark:text-primary-400 mx-auto mb-1" />
-                <p className="text-xs text-gray-500 dark:text-gray-400">Orders</p>
-                <p className="font-semibold text-gray-900 dark:text-white">12</p>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-center">
-                <Clock className="h-5 w-5 text-primary-600 dark:text-primary-400 mx-auto mb-1" />
-                <p className="text-xs text-gray-500 dark:text-gray-400">Points</p>
-                <p className="font-semibold text-gray-900 dark:text-white">1,250</p>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="flex space-x-2">
-              <button className="flex-1 btn-secondary text-xs py-2 flex items-center justify-center space-x-1">
-                <Heart className="h-3 w-3" />
-                <span>Wishlist</span>
-              </button>
-              <button className="flex-1 btn-secondary text-xs py-2 flex items-center justify-center space-x-1">
-                <Settings className="h-3 w-3" />
-                <span>Settings</span>
-              </button>
-            </div>
-
-            {/* Sign Out Button */}
             <button
               onClick={handleSignOut}
-              className="w-full mt-3 btn-secondary text-xs py-2 flex items-center justify-center space-x-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+              className="w-full flex items-center justify-center space-x-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
             >
-              <LogOut className="h-3 w-3" />
+              <LogOut className="w-4 h-4" />
               <span>Sign Out</span>
             </button>
-          </>
+          </div>
         ) : (
-          <>
-            <div className="text-center mb-4">
-              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
-                <User className="h-8 w-8 text-gray-400" />
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                <User className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Welcome to Kasawa</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Sign in to access your account</p>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  Guest User
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Sign in for full access
+                </p>
+              </div>
             </div>
-            
-            <button 
+            <button
               onClick={() => setShowAuthModal(true)}
-              className="w-full btn-primary py-3 flex items-center justify-center space-x-2"
+              className="w-full flex items-center justify-center space-x-2 text-sm text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 transition-colors"
             >
-              <LogIn className="h-4 w-4" />
-              <span>Sign In / Register</span>
+              <LogIn className="w-4 h-4" />
+              <span>Sign In</span>
             </button>
-          </>
+          </div>
         )}
       </div>
 
-      {/* Special Offers */}
-      <div className="card">
-        <div className="flex items-center space-x-2 mb-4">
-          <Gift className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-          <h3 className="font-semibold text-gray-900 dark:text-white">Special Offers</h3>
-        </div>
-        
-        <div className="space-y-3">
-          {specialOffers.map((offer) => (
-            <div key={offer.id} className="bg-gradient-to-r from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 rounded-lg p-3 border border-primary-200 dark:border-primary-800">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-gray-900 dark:text-white text-sm">{offer.title}</h4>
-                <span className="text-xs bg-primary-100 dark:bg-primary-800 text-primary-800 dark:text-primary-200 px-2 py-1 rounded">
-                  {offer.discount}
-                </span>
-              </div>
-              <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">Use code: <span className="font-mono font-semibold text-primary-600 dark:text-primary-400">{offer.code}</span></p>
-              <button className="w-full btn-secondary text-xs py-1">
-                Copy Code
+      {/* Categories */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+          Categories
+        </h3>
+        <div className="space-y-1">
+          {categories.map((category) => {
+            const Icon = category.icon;
+            return (
+              <button
+                key={category.id}
+                onClick={() => onCategoryChange(category.id)}
+                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  selectedCategory === category.id
+                    ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{category.name}</span>
               </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      {/* Recent Orders */}
-      {isAuthenticated && (
-        <div className="card">
-          <div className="flex items-center space-x-2 mb-4">
-            <Package className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-            <h3 className="font-semibold text-gray-900 dark:text-white">Recent Orders</h3>
-          </div>
-          
+      {/* Recent Orders - Only show for logged in users */}
+      {user && recentOrders.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+            <Clock className="w-4 h-4 mr-2" />
+            Recent Orders
+          </h3>
           <div className="space-y-3">
-            {recentOrders.map((order) => (
-              <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-white text-sm">{order.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{order.date}</p>
+            {recentOrders.slice(0, 3).map((order) => (
+              <div key={order.id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium text-gray-900 dark:text-white">
+                    {order.order_number}
+                  </p>
+                  <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.status)}`}>
+                    {order.status}
+                  </span>
                 </div>
-                <span className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded">
-                  {order.status}
-                </span>
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                  <span>${order.total.toFixed(2)}</span>
+                  <span>{formatDate(order.created_at)}</span>
+                </div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Categories */}
-      <div className="card">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Categories</h3>
-        
-        <nav className="space-y-2">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => onCategoryChange(category.id)}
-              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                selectedCategory === category.id
-                  ? 'bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-200'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-            >
-              {category.icon}
-              <span className="font-medium">{category.name}</span>
-            </button>
-          ))}
-        </nav>
+      {/* Special Offers */}
+      <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white">
+        <div className="flex items-center space-x-2 mb-2">
+          <Star className="w-4 h-4" />
+          <h3 className="text-sm font-semibold">Special Offer</h3>
+        </div>
+        <p className="text-xs opacity-90 mb-3">
+          Get 15% off your first order when you sign up!
+        </p>
+        {!user && (
+          <button
+            onClick={() => setShowAuthModal(true)}
+            className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 text-white text-xs font-medium py-2 px-3 rounded-lg transition-colors"
+          >
+            Sign Up Now
+          </button>
+        )}
       </div>
 
-      {/* Additional Info */}
-      <div className="card">
-        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">About Kasawa</h4>
-        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-          Premium cannabis products delivered to your door. Quality guaranteed.
-        </p>
-        
-        <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-            <span>Lab tested</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-            <span>Discrete shipping</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-            <span>24/7 support</span>
+      {/* Quick Stats - Only show for logged in users */}
+      {user && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+            <ShoppingBag className="w-4 h-4 mr-2" />
+            Quick Stats
+          </h3>
+          <div className="grid grid-cols-2 gap-3 text-center">
+            <div className="p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                {recentOrders.length}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Orders</p>
+            </div>
+            <div className="p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                {recentOrders.filter(o => o.status === 'delivered').length}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Delivered</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Auth Modal */}
       <AuthModal

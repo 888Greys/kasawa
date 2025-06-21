@@ -12,6 +12,7 @@ export interface SupabaseProduct {
   thc_content: number | null;
   cbd_content: number | null;
   effects: string[];
+  featured: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -28,7 +29,7 @@ const convertSupabaseProduct = (product: SupabaseProduct): Product => ({
   imageUrl: product.images[0] || '',
   images: product.images,
   inStock: product.stock_quantity > 0,
-  featured: product.effects.includes('featured'),
+  featured: product.featured || false,
   createdAt: new Date(product.created_at),
 });
 
@@ -80,7 +81,7 @@ export const productService = {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .contains('effects', ['featured'])
+        .eq('featured', true)
         .order('created_at', { ascending: false })
         .limit(4);
 
