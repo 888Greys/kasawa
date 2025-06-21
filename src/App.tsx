@@ -69,42 +69,7 @@ function App() {
     setShowProductModal(true);
   };
 
-  // Filter and search products
-  const filteredProducts = useMemo(() => {
-    let filtered = products;
-
-    // Category filter
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(product => product.category === selectedCategory);
-    }
-
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Price filter
-    filtered = filtered.filter(product =>
-      product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1]
-    );
-
-    // THC filter
-    filtered = filtered.filter(product => {
-      if (product.thcContent === undefined) return true;
-      return product.thcContent >= filters.thcRange[0] && product.thcContent <= filters.thcRange[1];
-    });
-
-    // In stock filter
-    if (filters.inStock) {
-      filtered = filtered.filter(product => product.inStock);
-    }
-
-    return filtered;
-  }, [selectedCategory, searchQuery, filters]);
-
+  // Get featured products for banner
   const featuredProducts = products.filter(product => product.featured);
   const cartTotal = cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
 
@@ -145,7 +110,7 @@ function App() {
 
             {/* Product Feed */}
             <ProductFeed
-              products={filteredProducts}
+              selectedCategory={selectedCategory}
               onAddToCart={addToCart}
               onProductClick={handleProductClick}
             />
