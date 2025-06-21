@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { products } from './data/products';
 import { Product, CartItem } from './types';
 import Header from './components/Header';
@@ -9,8 +10,9 @@ import SearchBar from './components/SearchBar';
 import FeaturedBanner from './components/FeaturedBanner';
 import ProductModal from './components/ProductModal';
 import DarkModeToggle from './components/DarkModeToggle';
+import AuthCallback from './components/AuthCallback';
 
-function App() {
+function MainApp() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showCart, setShowCart] = useState(false);
@@ -123,6 +125,17 @@ function App() {
         onAddToCart={addToCart}
       />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/" element={<MainApp />} />
+      </Routes>
+    </Router>
   );
 }
 
